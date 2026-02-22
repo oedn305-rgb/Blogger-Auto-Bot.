@@ -1,26 +1,25 @@
-name: Blogger Auto Bot
+name: Blogger Final Bot
 on:
-  workflow_dispatch:
+  workflow_dispatch: # للتشغيل اليدوي
   schedule:
-    - cron: '0 */6 * * *'
+    - cron: '0 */6 * * *' # تشغيل كل 6 ساعات
 
 jobs:
-  build:
+  run_bot:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
-      - name: Install Dependencies
-        run: |
-          pip install -q -U google-generativeai
+      - name: Install Libraries
+        run: pip install -q -U google-generativeai
 
-      - name: Run Bot
+      - name: Execute
         env:
           GEMINI_KEY: ${{ secrets.GEMINI_KEY }}
           MY_EMAIL: ${{ secrets.MY_EMAIL }}

@@ -1,53 +1,44 @@
 import os
 import smtplib
 import sys
+import time
 from email.mime.text import MIMEText
 from google import genai
 from google.genai import types
 
 def run_pro_trend_bot():
     try:
-        # 1. جلب البيانات من الـ Secrets
         api_key = os.getenv("GEMINI_KEY")
         sender_email = os.getenv("MY_EMAIL")
         app_password = os.getenv("EMAIL_PASS")
         target_email = "oedn305.trnd20266@blogger.com"
 
         if not all([api_key, sender_email, app_password]):
-            print("❌ خطأ: أحد الأسرار (Secrets) مفقود!")
+            print("❌ نقص في البيانات السرية (Secrets)")
             sys.exit(1)
 
-        # 2. إعداد العميل
         client = genai.Client(api_key=api_key)
         
-        # 3. هندسة الأمر
-        prompt = """
-        ابحث في ترندات السعودية والخليج الآن. 
-        اختر موضوعاً ساخناً واكتب عنه مقال HTML احترافي يتجاوز 900 كلمة.
-        اجعل التنسيق ممتازاً مع عناوين فرعية H2 و H3.
-        ضع كلمة (تقنية) أو (رياضة) أو (اقتصاد) في أول سطر حسب الموضوع.
-        """
+        prompt = "ابحث عن ترند حالي في السعودية والخليج الآن، واكتب مقال HTML احترافي SEO يتجاوز 900 كلمة."
 
-        # 4. توليد المحتوى (التعديل هنا لإصلاح خطأ الـ Tools)
+        # التصحيح النهائي لاسم الأداة وفقاً لتحديث 2026
         response = client.models.generate_content(
             model='gemini-2.0-flash',
             contents=prompt,
             config=types.GenerateContentConfig(
-                tools=[types.Tool(google_search=types.GoogleSearchRetrieval())] # الطريقة الصحيحة والمحدثة
+                tools=[types.Tool(google_search=types.GoogleSearch())] 
             )
         )
         
-        raw_output = response.text.strip()
-        clean_text = raw_output.replace('```html', '').replace('```', '').strip()
+        content = response.text.replace('```html', '').replace('```', '').strip()
         
-        # استخراج العنوان للرسالة
-        lines = clean_text.split('\n')
-        title_tag = [l for l in lines if '<h1>' in l]
-        email_subject = title_tag[0].replace('<h1>', '').replace('</h1>', '').strip() if title_tag else "أخبار الترند اليوم"
+        # استخراج العنوان
+        lines = content.split('\n')
+        title = [l for l in lines if '<h1>' in l]
+        subject = title[0].replace('<h1>', '').replace('</h1>', '').strip() if title else "ترند اليوم في السعودية"
 
-        # 5. إرسال الإيميل
-        msg = MIMEText(clean_text, 'html', 'utf-8')
-        msg['Subject'] = email_subject
+        msg = MIMEText(content, 'html', 'utf-8')
+        msg['Subject'] = subject
         msg['From'] = sender_email
         msg['To'] = target_email
 
@@ -55,10 +46,13 @@ def run_pro_trend_bot():
             server.login(sender_email, app_password)
             server.send_message(msg)
         
-        print(f"🚀 تم بنجاح! العنوان: {email_subject}")
+        print(f"🚀 تم بنجاح! العنوان: {subject}")
 
     except Exception as e:
-        print(f"❌ حدث خطأ تقني: {str(e)}")
+        if "429" in str(e):
+            print("⚠️ تم تجاوز الحصة المؤقتة. انتظر دقيقة ثم حاول مرة أخرى.")
+        else:
+            print(f"❌ خطأ تقني: {str(e)}")
         sys.exit(1)
 
 if __name__ == "__main__":

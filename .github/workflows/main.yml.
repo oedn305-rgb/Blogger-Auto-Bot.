@@ -2,9 +2,8 @@ name: Pro Trend Publisher Bot
 
 on:
   schedule:
-    # سيقوم البوت بالعمل كل 4 ساعات تلقائياً (6 مرات يومياً)
     - cron: '0 */4 * * *'
-  workflow_dispatch: # يتيح لك تشغيل البوت يدوياً في أي وقت للتجربة
+  workflow_dispatch:
 
 jobs:
   build:
@@ -16,15 +15,15 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.9'
+          python-version: '3.10' # تأكد من استخدام نسخة حديثة
 
       - name: Install Google GenAI Library
         run: |
-          pip install -q -U google-genai
+          python -m pip install --upgrade pip
+          pip install google-genai  # تثبيت المكتبة المطلوبة
 
       - name: Run Global Trend Bot
         env:
-          # تأكد أن هذه الأسماء مطابقة لما وضعته في الـ Secrets
           GEMINI_KEY: ${{ secrets.GEMINI_KEY }}
           MY_EMAIL: ${{ secrets.MY_EMAIL }}
           EMAIL_PASS: ${{ secrets.EMAIL_PASS }}

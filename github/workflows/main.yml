@@ -1,0 +1,24 @@
+name: Blogger Auto Bot
+on:
+  schedule:
+    - cron: '*/15 * * * *' # تشغيل كل 15 دقيقة
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Run Bot
+        env:
+          GEMINI_KEY: ${{ secrets.GEMINI_KEY }}
+          BLOG_ID: ${{ secrets.BLOG_ID }}
+          BLOGGER_TOKEN: ${{ secrets.BLOGGER_TOKEN }}
+        run: python bot.py

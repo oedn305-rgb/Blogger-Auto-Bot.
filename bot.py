@@ -2,47 +2,44 @@ import os
 import smtplib
 from email.mime.text import MIMEText
 import google.generativeai as genai
+import sys
 
-def run_bot():
+def run():
     try:
-        # 1. التحقق من وجود المفاتيح
+        # 1. جلب البيانات
         api_key = os.getenv("GEMINI_KEY")
-        my_email = os.getenv("MY_EMAIL")
-        email_pass = os.getenv("EMAIL_PASS")
-        
-        if not all([api_key, my_email, email_pass]):
-            print("خطأ: تأكد من إضافة GEMINI_KEY و MY_EMAIL و EMAIL_PASS في Secrets")
-            return
+        sender = os.getenv("MY_EMAIL")
+        password = os.getenv("EMAIL_PASS")
+        target = "oedn305.trnd20266@blogger.com"
 
-        # 2. إعداد جيمناي
+        print(f"Checking keys... Email: {sender}")
+
+        # 2. توليد المحتوى
         genai.configure(api_key=api_key)
         model = genai.GenerativeModel('gemini-1.5-flash')
-
-        # 3. صياغة المقال
-        prompt = "اكتب مقال ترند عربي احترافي. ابدأ بالعنوان مباشرة. استخدم تنسيق HTML بسيط جداً."
-        response = model.generate_content(prompt)
         
-        # تنظيف النص من أي علامات زائدة مثل ```html
-        content = response.text.replace('```html', '').replace('```', '').strip()
+        print("Connecting to Gemini...")
+        response = model.generate_content("اكتب مقال ترند عربي تقني قصير جدا بتنسيق HTML")
+        article_html = response.text
+        print("Article generated successfully!")
 
-        # 4. إعداد الإيميل السري
-        to_email = "oedn305.trnd20266@blogger.com"
-        msg = MIMEText(content, 'html', 'utf-8')
+        # 3. إعداد الإيميل
+        msg = MIMEText(article_html, 'html', 'utf-8')
         msg['Subject'] = "مقال ترند تلقائي"
-        msg['From'] = my_email
-        msg['To'] = to_email
+        msg['From'] = sender
+        msg['To'] = target
 
-        # 5. الإرسال
-        print("جاري محاولة الإرسال...")
+        # 4. الإرسال
+        print("Connecting to Gmail Server...")
         with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
-            server.login(my_email, email_pass)
+            server.login(sender, password)
             server.send_message(msg)
         
-        print("✅ تم النشر بنجاح في بلوجر!")
+        print("✅ SUCCESS: Post sent to Blogger!")
 
     except Exception as e:
-        print(f"❌ حدث خطأ حقيقي هنا: {str(e)}")
-        raise e  # لكي يظهر الخطأ بالتفصيل في GitHub
+        print(f"❌ ERROR FOUND: {str(e)}")
+        sys.exit(1)
 
 if __name__ == "__main__":
-    run_bot()
+    run()

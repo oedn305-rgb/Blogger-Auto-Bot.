@@ -1,33 +1,34 @@
 import os
 import smtplib
 import sys
-# تثبيت المكتبة برمجياً للتأكد 100% من وجودها
-try:
-    import google.generativeai as genai
-except ImportError:
-    os.system('pip install -q google-generativeai')
-    import google.generativeai as genai
-
+# محاولة تثبيت المكتبة للتأكد
+os.system('pip install -q google-generativeai')
+import google.generativeai as genai
 from email.mime.text import MIMEText
 
-def run_bot():
+def run_final_stable():
     try:
-        # جلب البيانات
+        # 1. جلب البيانات
         api_key = os.getenv("GEMINI_KEY")
         sender_email = os.getenv("MY_EMAIL")
         app_password = os.getenv("EMAIL_PASS")
         target_email = "oedn305.trnd20266@blogger.com"
 
-        # إعداد الموديل
+        # 2. الإعداد (استخدام الموديل المضمون gemini-pro)
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-1.5-flash')
         
-        # توليد محتوى سريع
-        response = model.generate_content("اكتب مقال HTML عن أهمية التقنية في 2026")
+        # ملاحظة: استخدمنا gemini-pro لأنه الأكثر استقراراً ويحل مشكلة 404
+        model = genai.GenerativeModel('gemini-pro')
         
-        # إرسال الإيميل
-        msg = MIMEText(response.text, 'html', 'utf-8')
-        msg['Subject'] = "تحديث تقني جديد"
+        # 3. توليد المحتوى
+        topic = "أحدث تقنيات 2026 والذكاء الاصطناعي"
+        response = model.generate_content(f"اكتب مقال HTML احترافي عن: {topic}")
+        
+        content = response.text.replace('```html', '').replace('```', '').strip()
+
+        # 4. إعداد وإرسال الإيميل
+        msg = MIMEText(content, 'html', 'utf-8')
+        msg['Subject'] = f"تحديث حصري: {topic}"
         msg['From'] = sender_email
         msg['To'] = target_email
 
@@ -35,11 +36,4 @@ def run_bot():
             server.login(sender_email, app_password)
             server.send_message(msg)
         
-        print("✅ تم التشغيل والنشر بنجاح!")
-
-    except Exception as e:
-        print(f"❌ خطأ: {str(e)}")
-        sys.exit(1)
-
-if __name__ == "__main__":
-    run_bot()
+        print("✅ أخيراً! العلامة الخضراء

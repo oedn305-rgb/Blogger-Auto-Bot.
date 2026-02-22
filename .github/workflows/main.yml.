@@ -1,11 +1,11 @@
-name: Blogger Auto Publisher
+name: Blogger Auto Bot
 on:
-  workflow_dispatch: # للتشغيل اليدوي بضغطة زر
+  workflow_dispatch:
   schedule:
-    - cron: '0 */6 * * *' # ينشر تلقائياً كل 6 ساعات
+    - cron: '0 */6 * * *'
 
 jobs:
-  publish:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -16,10 +16,11 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Install Google AI Library
-        run: pip install -q -U google-generativeai
+      - name: Install Dependencies
+        run: |
+          pip install -q -U google-generativeai
 
-      - name: Execute Bot
+      - name: Run Bot
         env:
           GEMINI_KEY: ${{ secrets.GEMINI_KEY }}
           MY_EMAIL: ${{ secrets.MY_EMAIL }}

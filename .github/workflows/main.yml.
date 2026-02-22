@@ -1,27 +1,30 @@
-name: Blogger Ultimate Bot
+name: Pro Trend Publisher Bot
+
 on:
-  workflow_dispatch: # زر التشغيل اليدوي
   schedule:
-    - cron: '0 */6 * * *' # كل 6 ساعات
+    # سيقوم البوت بالعمل كل 4 ساعات تلقائياً (6 مرات يومياً)
+    - cron: '0 */4 * * *'
+  workflow_dispatch: # يتيح لك تشغيل البوت يدوياً في أي وقت للتجربة
 
 jobs:
-  execution:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v2
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - name: Set up Python
+        uses: actions/setup-python@v2
         with:
-          python-version: '3.10'
+          python-version: '3.9'
 
-      - name: Install Libraries
+      - name: Install Google GenAI Library
         run: |
-          pip install -q -U google-generativeai
+          pip install -q -U google-genai
 
-      - name: Run
+      - name: Run Global Trend Bot
         env:
+          # تأكد أن هذه الأسماء مطابقة لما وضعته في الـ Secrets
           GEMINI_KEY: ${{ secrets.GEMINI_KEY }}
           MY_EMAIL: ${{ secrets.MY_EMAIL }}
           EMAIL_PASS: ${{ secrets.EMAIL_PASS }}

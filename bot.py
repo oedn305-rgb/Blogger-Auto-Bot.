@@ -1,39 +1,29 @@
-import feedparser
-import google.generativeai as genai
-import requests
 import os
+import smtplib
+from email.mime.text import MIMEText
+import google.generativeai as genai
 
-# إعدادات المفاتيح (سنجعلها سرية في GitHub لاحقاً)
-GEMINI_API_KEY = os.getenv("GEMINI_KEY")
-BLOG_ID = os.getenv("BLOG_ID")
-BLOGGER_TOKEN = os.getenv("BLOGGER_TOKEN")
-RSS_URL = "https://feeds.bbci.co.uk/arabic/rss.xml"
+# إعداد جيمناي
+genai.configure(api_key=os.getenv("GEMINI_KEY"))
+model = genai.GenerativeModel('gemini-1.5-flash')
 
-def get_latest_news():
-    feed = feedparser.parse(RSS_URL)
-    item = feed.entries[0]
-    return item.title, item.summary
+# صياغة المقال (تقدر تغير البرومبت هنا)
+prompt = "اكتب مقال ترند عربي احترافي ومنسق بـ HTML"
+response = model.generate_content(prompt)
+html_content = response.text
 
-def rephrase_with_gemini(title, description):
-    genai.configure(api_key=GEMINI_API_KEY)
-    model = genai.GenerativeModel('gemini-1.5-flash')
-    prompt = f"خبير سيو. أعد صياغة هذا الخبر بأسلوب احترافي وحصري: \nالعنوان: {title}\nالتفاصيل: {description}"
-    response = model.generate_content(prompt)
-    return response.text
+# إعداد الإيميل السري
+to_email = "oedn305.trnd20266@blogger.com" # هذا إيميلك السري اللي رتبناه
+msg = MIMEText(html_content, 'html')
+msg['Subject'] = "مقال جديد من بوت الترند"
+msg['From'] = os.getenv("MY_EMAIL")
+msg['To'] = to_email
 
-def post_to_blogger(content):
-    url = f"https://www.googleapis.com/blogger/v3/blogs/{BLOG_ID}/posts/"
-    headers = {"Authorization": f"Bearer {BLOGGER_TOKEN}"}
-    payload = {
-        "kind": "blogger#post",
-        "title": "مقال تقني جديد", # جيمناي سيعدل العنوان داخل المحتوى
-        "content": content
-    }
-    r = requests.post(url, json=payload, headers=headers)
-    return r.status_code
-
-# تشغيل البوت
-title, desc = get_latest_news()
-new_content = rephrase_with_gemini(title, desc)
-status = post_to_blogger(new_content)
-print(f"Status: {status}")
+# الإرسال
+try:
+    with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
+        server.login(os.getenv("MY_EMAIL"), os.getenv("EMAIL_PASS"))
+        server.send_message(msg)
+    print("Success: Post sent to Blogger!")
+except Exception as e:
+    print(f"Error: {e}")

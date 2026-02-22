@@ -1,0 +1,28 @@
+name: Blogger Auto Bot
+on:
+  schedule:
+    - cron: '0 */3 * * *' # ينشر تلقائياً كل 3 ساعات
+  workflow_dispatch: # يضيف لك زر "تشغيل يدوي" للتجربة
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies
+        run: |
+          pip install google-generativeai
+
+      - name: Run Bot
+        env:
+          GEMINI_KEY: ${{ secrets.GEMINI_KEY }}
+          MY_EMAIL: ${{ secrets.MY_EMAIL }}
+          EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
+        run: python bot.py

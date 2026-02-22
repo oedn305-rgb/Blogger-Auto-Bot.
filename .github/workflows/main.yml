@@ -1,0 +1,32 @@
+name: Pro Trend Publisher Bot
+
+on:
+  schedule:
+    # هذا السطر يجعل البوت ينشر مقالاً كل 4 ساعات (6 مقالات في اليوم)
+    - cron: '0 */4 * * *'
+  workflow_dispatch: # يتيح لك تشغيل البوت يدوياً في أي وقت
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.10'
+
+      - name: Install Libraries
+        run: |
+          python -m pip install --upgrade pip
+          pip install google-genai
+
+      - name: Run Global Trend Bot
+        env:
+          # تأكد أنك أضفت هذه الأسرار في إعدادات GitHub (Secrets)
+          GEMINI_KEY: ${{ secrets.GEMINI_KEY }}
+          MY_EMAIL: ${{ secrets.MY_EMAIL }}
+          EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
+        run: python bot.py

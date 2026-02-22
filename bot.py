@@ -1,32 +1,33 @@
 import os
 import smtplib
 import sys
-import google.generativeai as genai
+# تثبيت المكتبة برمجياً للتأكد 100% من وجودها
+try:
+    import google.generativeai as genai
+except ImportError:
+    os.system('pip install -q google-generativeai')
+    import google.generativeai as genai
+
 from email.mime.text import MIMEText
 
-def run_final():
+def run_bot():
     try:
-        # 1. جلب البيانات من الأسرار
+        # جلب البيانات
         api_key = os.getenv("GEMINI_KEY")
         sender_email = os.getenv("MY_EMAIL")
         app_password = os.getenv("EMAIL_PASS")
         target_email = "oedn305.trnd20266@blogger.com"
 
-        # 2. إعداد جوجل (المكتبة المستقرة)
+        # إعداد الموديل
         genai.configure(api_key=api_key)
-        
-        # 3. اختيار الموديل (فلاش 1.5 هو الأكثر استقراراً الآن)
         model = genai.GenerativeModel('gemini-1.5-flash')
         
-        # 4. توليد المقال
-        topic = "مستقبل التكنولوجيا والعمل عن بعد في السعودية 2026"
-        response = model.generate_content(f"اكتب مقال HTML طويل واحترافي عن: {topic}")
+        # توليد محتوى سريع
+        response = model.generate_content("اكتب مقال HTML عن أهمية التقنية في 2026")
         
-        content = response.text.replace('```html', '').replace('```', '').strip()
-
-        # 5. إعداد وإرسال الإيميل
-        msg = MIMEText(content, 'html', 'utf-8')
-        msg['Subject'] = topic
+        # إرسال الإيميل
+        msg = MIMEText(response.text, 'html', 'utf-8')
+        msg['Subject'] = "تحديث تقني جديد"
         msg['From'] = sender_email
         msg['To'] = target_email
 
@@ -34,11 +35,11 @@ def run_final():
             server.login(sender_email, app_password)
             server.send_message(msg)
         
-        print("✅ أخيراً! تم النشر بنجاح.")
+        print("✅ تم التشغيل والنشر بنجاح!")
 
     except Exception as e:
         print(f"❌ خطأ: {str(e)}")
         sys.exit(1)
 
 if __name__ == "__main__":
-    run_final()
+    run_bot()

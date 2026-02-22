@@ -1,0 +1,22 @@
+name: Auto Post
+on:
+  schedule:
+    - cron: '0 */3 * * *' # ينشر كل 3 ساعات
+  workflow_dispatch: # زر تشغيل يدوي
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+      - name: Install dependencies
+        run: pip install google-generativeai
+      - name: Run bot
+        env:
+          GEMINI_KEY: ${{ secrets.GEMINI_KEY }}
+          MY_EMAIL: ${{ secrets.MY_EMAIL }}
+          EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
+        run: python bot.py

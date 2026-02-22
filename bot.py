@@ -12,27 +12,43 @@ def run_blogger_bot():
         app_password = os.getenv("EMAIL_PASS")
         target_email = "oedn305.trnd20266@blogger.com"
 
+        if not all([api_key, sender_email, app_password]):
+            print("❌ نقص في إعدادات Secrets")
+            return
+
         print(f"--- بدء الاتصال بحساب: {sender_email} ---")
 
-        # 2. إعداد الذكاء الاصطناعي (النسخة المستقرة عالمياً)
+        # 2. إعداد جيمناي والبحث عن الموديل المتاح
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-1.0-pro')
         
-        print("جاري توليد مقال الترند...")
-        prompt = "اكتب مقالاً إخبارياً عربياً قصيراً ومنسقاً بـ HTML (استخدم h2 و p). ابدأ بالعنوان مباشرة."
+        # البحث عن موديل متاح (تجاوز خطأ 404)
+        available_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
+        if not available_models:
+            raise Exception("No supported models found for this API Key")
+        
+        # اختيار أول موديل متاح (غالباً سيكون gemini-pro أو gemini-1.5-flash)
+        model_name = available_models[0]
+        print(f"✅ تم العثور على الموديل المتاح: {model_name}")
+        model = genai.GenerativeModel(model_name)
+
+        # 3. توليد المحتوى
+        print("جاري توليد المقال...")
+        prompt = "اكتب مقال ترند تقني عربي بأسلوب جذاب. استخدم HTML (h2, p). لا تضع علامات ```."
         response = model.generate_content(prompt)
         
-        # تنظيف النص من أي زوائد
+        if not response.text:
+            raise Exception("Gemini returned empty text")
+
         content = response.text.replace('```html', '').replace('```', '').strip()
 
-        # 3. إعداد رسالة الإيميل
+        # 4. إعداد الإيميل
         msg = MIMEText(content, 'html', 'utf-8')
         msg['Subject'] = "تحديث تلقائي للمدونة"
         msg['From'] = sender_email
         msg['To'] = target_email
 
-        # 4. الإرسال عبر Gmail
-        print("جاري محاولة الإرسال إلى بلوجر...")
+        # 5. الإرسال
+        print("جاري الإرسال إلى بلوجر...")
         with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
             server.login(sender_email, app_password)
             server.send_message(msg)

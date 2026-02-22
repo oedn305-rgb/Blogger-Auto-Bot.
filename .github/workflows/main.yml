@@ -1,0 +1,36 @@
+name: Blogger_Auto_Bot_2026
+
+# تحديد متى يعمل البوت
+on:
+  workflow_dispatch: # يسمح لك بتشغيل البوت يدوياً بضغطة زر
+  schedule:
+    - cron: '0 */6 * * *' # يعمل تلقائياً كل 6 ساعات لنشر محتوى جديد
+
+jobs:
+  build_and_run:
+    runs-on: ubuntu-latest
+    
+    steps:
+      # 1. جلب الملفات من المستودع
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # 2. إعداد لغة بايثون (نسخة مستقرة)
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      # 3. تثبيت المكتبات (إصدار يضمن عدم تعارض الموديلات)
+      - name: Install Google AI dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -q -U google-generativeai
+
+      # 4. تشغيل البوت وربط الخزنة السرية
+      - name: Execute Blogger Bot
+        env:
+          GEMINI_KEY: ${{ secrets.GEMINI_KEY }}
+          MY_EMAIL: ${{ secrets.MY_EMAIL }}
+          EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
+        run: python bot.py
